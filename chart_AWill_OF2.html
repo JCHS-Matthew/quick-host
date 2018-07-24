@@ -1,0 +1,641 @@
+<div id="JCHS_chart_AWill_OF2" class="JCHS-chart-wrapper">
+  <h3 id="chart_title_AWill_OF2" class="JCHS-chart-title"></h3>
+  <div id="container_AWill_OF2" class="JCHS-map-container"></div>
+  <div id="table_notes_AWill_OF2" class="JCHS-table-notes"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/maps/modules/export-data.js"></script>
+
+<script>/**
+* @namespace JCHS
+*/
+
+var JCHS = {
+
+  charts: {},
+
+  searchCallback: {},
+
+  sheetID: 'placeholder',
+
+  range: 'Sheet1',
+
+  colors6: {
+    color1: '#467b91',
+    color2: '#8db8c9',
+    color3: '#c8ded6',
+    color4: '#f6e599',
+    color5: '#eab700',
+    color6: '#c14d00'
+  },
+
+  logoURL: 'http://www.jchs.harvard.edu/sites/default/files/harvard_jchs_logo_2017.png',
+
+  standardOptions: {
+
+    chart: {
+      marginTop: 40,
+      events: {
+        load: function load() {
+          if (this.renderer.forExport) {
+            this.renderer.image(JCHS.logoURL, 0, this.chartHeight - 50, 170, 55).add();
+          }
+          this.update({
+            exporting: {
+              menuItemDefinitions: {
+                viewFullDataset: {
+                  text: 'View full dataset',
+                  onclick: function onclick() {
+                    window.open('https://docs.google.com/spreadsheets/d/' + sheetID);
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    },
+
+    title: {
+      style: { fontFamily: '"Open Sans", sans-serif' },
+      text: null
+    },
+
+    subtitle: {
+      style: { fontFamily: '"Open Sans", sans-serif' },
+      text: null
+    },
+
+    legend: {
+      title: {
+        style: {
+          fontFamily: '"Open Sans", sans-serif',
+          fontWeight: 'normal'
+        }
+      },
+      itemStyle: {
+        fontFamily: '"Open Sans", sans-serif',
+        fontWeight: 'normal'
+      },
+      backgroundColor: 'rgba(255, 255, 255, 0.9)'
+    },
+
+    xAxis: {
+      title: { style: { fontFamily: '"Open Sans", sans-serif' } },
+      labels: { style: { fontFamily: '"Open Sans", sans-serif' } }
+    },
+
+    yAxis: [{
+      labels: { style: { fontFamily: '"Open Sans", sans-serif' } },
+      title: {
+        text: 'null',
+        offset: -110,
+        x: 23,
+        y: -5,
+        align: 'high',
+        rotation: 0,
+        style: {
+          whiteSpace: 'nowrap',
+          fontFamily: '"Open Sans", sans-serif'
+        }
+      }
+    }, {
+      labels: { style: { fontFamily: '"Open Sans", sans-serif' } },
+      title: {
+        text: 'null',
+        offset: -110,
+        x: 23,
+        y: -5,
+        align: 'high',
+        rotation: 0,
+        style: {
+          whiteSpace: 'nowrap',
+          fontFamily: '"Open Sans", sans-serif'
+        }
+      }
+    }],
+
+    tooltip: {
+      enabled: true,
+      style: { fontFamily: '"Open Sans", sans-serif' },
+      backgroundColor: 'rgba(247,247,247, 1)',
+      useHTML: true,
+      shared: true
+    },
+
+    credits: {
+      enabled: false,
+      style: {
+        fontFamily: '"Open Sans", sans-serif',
+        color: '#333'
+      }
+    },
+
+    exporting: {
+      enabled: true,
+      chartOptions: {
+        chart: {
+          marginTop: 25,
+          marginBottom: 80
+        },
+        title: {
+          style: {
+            fontSize: '16px',
+            color: '#C14D00'
+          },
+          y: 8
+        },
+        subtitle: {
+          //use subtitle element for our table notes on export
+          widthAdjust: -170,
+          x: 170,
+          y: -28,
+          align: 'left',
+          verticalAlign: 'bottom',
+          style: {
+            color: '#999999',
+            fontSize: '7px'
+          }
+        },
+        series: { borderWidth: 0.5 },
+        legend: {
+          y: 60
+        }
+      },
+      menuItemDefinitions: {
+        viewFullDataset: {
+          text: 'View full dataset',
+          onclick: function onclick() {
+            window.open('https://docs.google.com/spreadsheets/d/' + SheetID);
+          }
+        }
+      },
+      buttons: {
+        contextButton: {
+          text: '<span style="font-family: Open Sans, sans-serif;">Export</span>',
+          menuItems: ['viewFullDataset',
+          //'viewSortableTable',
+          'separator', 'printChart', 'downloadPDF', 'separator', 'downloadPNG', 'downloadJPEG', 'separator', 'downloadXLS'],
+          theme: { fill: '#ffffff00' },
+          y: -10
+          //x: 5
+        }
+      }
+    }, //end exporting
+
+    plotOptions: {
+      spline: {
+        label: {
+          style: { fontFamily: '"Open Sans", sans-serif' }
+        }
+      }
+    }
+  }, //end standardOptions
+
+  mapOptions: {
+    plotOptions: {
+      series: {
+        allAreas: false,
+        joinBy: ['GEOID', 0],
+        keys: ['GEOID', 'value'],
+        states: {
+          select: { color: '#333' }
+        },
+        point: {
+          events: {
+            click: function click(event) {
+              drilldown(event.point.GEOID, event.point.name);
+            }
+          }
+        }
+      },
+      mapline: {
+        color: '#333',
+        lineWidth: 0.5,
+        enableMouseTracking: false
+      }
+    }, //end plotOptions
+
+    legend: {
+      layout: 'vertical',
+      align: 'right',
+      verticalAlign: 'middle',
+      y: 140,
+      x: 16,
+      padding: 5,
+      labelFormatter: function labelFormatter() {
+        if (!this.hasOwnProperty('from')) {
+          return 'Under ' + this.to;
+        } else if (!this.hasOwnProperty('to')) {
+          return this.from + ' or Over';
+        } else {
+          return this.from + ' – ' + this.to;
+        }
+      }
+    },
+
+    mapNavigation: {
+      enabled: true,
+      buttonOptions: { x: 1 },
+      buttons: {
+        zoomIn: { y: 1 },
+        zoomOut: { y: 29 }
+      }
+    }
+  }, //end mapOptions
+
+  drilldownOptions: {
+    chart: {
+      height: 180,
+      //width: 600,
+      spacingTop: 1
+    },
+
+    plotOptions: { series: { label: { enabled: false } } },
+
+    title: { style: { fontSize: '13px' } },
+
+    yAxis: { title: { text: null } },
+
+    tooltip: {
+      pointFormat: "<b>{point.y}</b>",
+      valueDecimals: 0
+    },
+
+    legend: { enabled: false },
+
+    exporting: { enabled: false }
+
+  } //end drilldownOptions
+
+  /**
+   *
+   * Compiles the correct set of options for different chart types.
+   * Returns the standard options if no chart type is given. 
+   *
+   * @function #options
+   * @memberof JCHS
+   *
+   * @param {String} chart_type - Currently supports 'map' and 
+   * 'drilldown'.
+   *
+   * @returns {Object} Object containing Highcharts options. 
+   */
+
+};JCHS.options = function (chart_type) {
+  if (chart_type === 'map') {
+    return $.extend(true, {}, JCHS.standardOptions, JCHS.mapOptions);
+  } else if (chart_type === 'drilldown') {
+    return $.extend(true, {}, JCHS.standardOptions, JCHS.drilldownOptions);
+  } else {
+    return JCHS.standardOptions;
+  }
+};
+
+/**
+ *
+ * Builds a GET request URL for the Google Sheets API, based on input
+ * sheet ID and range.
+ *
+ * @function #requestURL
+ * @memberof JCHS
+ *
+ * @param {String} sheetID - Unique ID of the Google Sheet (e.g., 
+          '1LxTyrgt7sTtRYzEr6BlTnKwpwoQPz5WiIrA8dpocgRM').
+ * @param {String} [range] - The data range. Defaults to 'Sheet1'. Accepts 
+ *        sheet ranges that conform to the Google API (e.g., 'Sheet1!A:F').
+ *
+ * @returns {String} A URL.
+ *
+ */
+
+JCHS.requestURL = function (sheetID) {
+  var range = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'Sheet1';
+
+  var baseURL = 'https://sheets.googleapis.com/v4/spreadsheets/';
+  var API_Key = 'AIzaSyDY_gHLV0A7liVYq64RxH7f7IYUKF15sOQ';
+  var API_params = 'valueRenderOption=UNFORMATTED_VALUE';
+  var requestURL = baseURL + sheetID + "/values/" + range + "?key=" + API_Key + "&" + API_params;
+
+  return requestURL;
+};
+
+/**
+ *
+ * Format a number and return a string.
+ *
+ * @function #numFormat
+ * @memberof JCHS
+ *
+ * @param {Number} number - The input number to format.
+ * @param {Number} [decimals] - The amount of decimals. A value of -1 preserves
+ *        the amount in the input number. Defaults to a maximum of 2 decimals 
+ *        (i.e., 1 returns '1', 1.2 returns '1.2', 1.23 returns '1.23', 1.234 
+ *        returns '1.23').
+ *
+ * @returns {String} The formatted number.
+
+ */
+
+JCHS.numFormat = function (number, decimals) {
+  /* Based on Highcharts.numberFormat */
+  number = +number || 0;
+  decimals = +decimals;
+
+  var origDec = (number.toString().split('.')[1] || '').length,
+      strinteger,
+      thousands,
+      ret,
+      roundedNumber,
+      fractionDigits;
+
+  if (decimals === -1) {
+    // Preserve decimals. Not huge numbers (#3793).
+    decimals = Math.min(origDec, 20);
+  } else if (isNaN(decimals)) {
+    decimals = Math.min(origDec, 2);
+  }
+
+  // Add another decimal to avoid rounding errors of float numbers. (#4573)
+  // Then use toFixed to handle rounding.
+  roundedNumber = (Math.abs(number) + Math.pow(10, -Math.max(decimals, origDec) - 1)).toFixed(decimals);
+
+  // A string containing the positive integer component of the number
+  strinteger = String(parseInt(roundedNumber));
+
+  // Leftover after grouping into thousands. Can be 0, 1 or 2.
+  thousands = strinteger.length > 3 ? strinteger.length % 3 : 0;
+
+  // Language
+  decimalPoint = '.';
+  thousandsSep = ',';
+
+  // Start building the return
+  ret = number < 0 ? '-' : '';
+
+  // Add the leftover after grouping into thousands. For example, in the
+  // number 42 000 000, this line adds 42.
+  ret += thousands ? strinteger.substr(0, thousands) + thousandsSep : '';
+
+  // Add the remaining thousands groups, joined by the thousands separator
+  ret += strinteger.substr(thousands).replace(/(\d{3})(?=\d)/g, '$1' + thousandsSep);
+
+  // Add the decimal point and the decimal component
+  if (decimals) {
+    // Get the decimal component
+    ret += decimalPoint + roundedNumber.slice(-decimals);
+  }
+
+  return ret;
+}; //end numFormat
+
+
+/**
+ *
+ * Add a search box with filtered list to the page. Adds one item to the list 
+ * for each unique value of a column from ref_data.
+ *
+ * On clicking a list item, selectPoint() is called, with the selected item 
+ * passed as the only parameter. For proper functionality, include in your 
+ * code a function named selectPoint() which uses the list item to initiate 
+ * any interactive features.
+ *
+ * For example:
+ * function selectPoint(selected_location) {
+ *   createChart(selected_location)
+ *   chart.update({title: { text: selected_location } })
+ * }
+ *
+ * @function #createSearchBox
+ * @memberof JCHS
+ *
+ * @param {Array} data - Reference dataset for chart.
+ * @param {String} chart_slug - Unique ID of chart, to ensure unique <div> ids in HTML.
+ * @param {Number} col_index - Column index of data to be listed in the search box. Defaults to 0.
+ * @param {String} type - 'dropdown' or 'search'. Only differences are 'dropdown' has a down 
+ * arrow at the right side of the box and has placeholder text 'Select a metro...', while 
+ * 'search' has no arrow and has placehold text  'Search for metro...'.
+ * @param {String} placeholder - Override the default placeholder text. 
+ * (e.g., 'Select a state...').
+ *
+ */
+
+JCHS.createSearchBox = function (data, chart_slug) {
+  var col_index = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  var type = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'dropdown';
+  var placeholder = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 'Select a metro...';
+
+
+  if (type === 'search') {
+    placeholder = 'Search for metro...';
+  }
+
+  $('#search_box_' + chart_slug).append('<input id="search_input_' + chart_slug + '" class="JCHS-search-input">');
+
+  var box = $('#search_input_' + chart_slug);
+  box.attr('placeholder', placeholder);
+  box.css('font-family', 'Open Sans');
+  if (type != 'dropdown') {
+    box.css('background-image', 'none');
+  }
+
+  box.after('<ul id="search_list_' + chart_slug + '" class="JCHS-search-list"></ul>');
+  var list = $('#search_list_' + chart_slug);
+
+  var dedup_data = [];
+
+  data.forEach(function (el) {
+    if (dedup_data.indexOf(el[col_index]) < 0) {
+      dedup_data.push(el[col_index]);
+    }
+  });
+  dedup_data.forEach(function (el) {
+    return list.append('<li>' + el + '</li>');
+  });
+
+  box.on('focus', function () {
+    box.val('');
+    list.show();
+  });
+
+  box.on('keyup focus', function () {
+    var filter = box.val().toUpperCase();
+    $('li').each(function (idx) {
+      if ($(this).html().toUpperCase().indexOf(filter) > -1) {
+        $(this).css('display', 'block');
+      } else {
+        $(this).css('display', 'none');
+      }
+    });
+  });
+
+  box.on('change', function () {
+    JCHS.searchCallback[chart_slug]($('#search_input_' + chart_slug).val());
+    box.blur();
+    list.hide();
+  }); //end box.on 'change'
+
+  box.on('blur', function () {
+    list.hide();
+  });
+
+  list.on('mousedown', 'li', function (e) {
+    box.val(e.target.innerHTML);
+    box.change();
+  });
+}; //end createSearchBox()
+
+
+Highcharts.setOptions({
+  lang: {
+    thousandsSep: ",",
+    contextButtonTitle: 'Export Chart',
+    downloadPDF: 'Download as PDF',
+    downloadCSV: 'Download chart data (CSV)',
+    downloadXLS: 'Download chart data (Excel)'
+  }
+});
+var chart_slug_AWill_OF2 = 'AWill_OF2';
+var sheetID_AWill_OF2 = '1-2qNM31nv35RaGligm1c9RG2TN94NIYJ3fMDBUt8Sso';
+var range_AWill_OF2 = 'Sheet1!A:W';
+
+var chart_title_AWill_OF2 = 'ONLINE FIGURE 2: MAJOR METRO REMODELING CYCLES';
+
+var table_notes_AWill_OF2 = 'Notes: Estimates were produced by applying annual shares of metro-level retail sales of building materials to two-year improvement spending levels from the AHS, and smoothed using a three year moving average. *Metro boundaries were updated in the 2015 AHS.<br/>Source: JCHS tabulations of HUD, American Housing Surveys and US Census Bureau, Retail Sales of Building Materials.';
+
+var categories_AWill_OF2 = [];
+var ref_data_AWill_OF2 = [];
+var chart_AWill_OF2 = {};
+
+/*~~~~~~ Document ready function ~~~~~~~~~~~~~~~~~*/
+$(document).ready(function () {
+  //get Google Sheet data
+  $.get(JCHS.requestURL(sheetID_AWill_OF2, range_AWill_OF2), function (obj) {
+
+    categories_AWill_OF2 = obj.values[0].slice(1);
+    ref_data_AWill_OF2 = obj.values.slice(1);
+
+    $('#chart_title_AWill_OF2').html(chart_title_AWill_OF2);
+    createChart_AWill_OF2('Chicago');
+    $('#table_notes_AWill_OF2').html(table_notes_AWill_OF2);
+  }); //end get request
+}); //end document.ready
+
+/*~~~~~~ Create the Chart ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+function createChart_AWill_OF2() {
+
+  /*~~~~~~~~ Build Chart Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+  var selected_data = [];
+
+  ref_data_AWill_OF2.forEach(function (el, idx) {
+    var metro_name = el[0];
+    if (metro_name == "US") {
+      selected_data.push({
+        name: metro_name,
+        data: el.slice(1),
+        marker: {
+          enabled: true
+        }
+      });
+    } else {
+      selected_data.push({
+        name: metro_name,
+        data: el.slice(1)
+      }); //end selected_data
+    }
+  }); //end forEach
+
+
+  /*~~~~~~~~ Begin Chart Code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+  chart_AWill_OF2 = Highcharts.chart('container_AWill_OF2', $.extend(true, {}, JCHS.options('chart'), {
+    chart: {
+      type: 'spline'
+    },
+
+    responsive: {
+      rules: [{
+        condition: {
+          maxWidth: 450
+        },
+        chartOptions: {
+          yAxis: [{ title: { enabled: false } }],
+          series: [{ label: { enabled: false } }, { label: { enabled: false } }, { label: { enabled: false } }, { label: { enabled: false } }, { label: { enabled: false } }, { label: { enabled: false } }]
+        }
+      }]
+    },
+
+    series: selected_data,
+
+    colors: ['#4E7686', '#c14d00', '#998b7d', '#43273a', '#e9c002', '#76ad99', '#c4c6a6'],
+
+    xAxis: {
+      categories: categories_AWill_OF2
+    },
+
+    yAxis: [{
+      allowDecimals: false,
+      title: {
+        text: 'Average per owner home improvement spending, 2015$',
+        offset: -294
+      },
+      labels: {
+        format: '${value:,.0f}' }
+    }, { title: { enabled: false } }],
+
+    plotOptions: {
+      spline: {
+        marker: {
+          enabled: false
+        },
+        events: {
+          hide: function hide() {
+            this.update({ label: { enabled: false } });
+          },
+          show: function show() {
+            this.update({ label: { enabled: true } });
+          }
+        }
+      }
+    }, //end plotOptions
+
+    /*~~~~~~~~~~~~~~ Custom tooltip content ~~~~~~~*/
+    tooltip: {
+      shared: false,
+      formatter: function formatter() {
+        var tooltip = '<b>' + this.x + '</b>';
+
+        tooltip += '<br/><b>' + this.point.series.name + ': ' + JCHS.numFormat(this.point.y) + '</b>';
+
+        if (this.series.index != 5) {
+          var series5 = this.series.chart.series[5];
+          tooltip += '<br/>' + series5.name + ': ' + JCHS.numFormat(series5.data[this.point.index].y);
+        }
+
+        return tooltip;
+      }
+    },
+
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~ Exporting Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+    exporting: {
+      filename: 'Metro Remodeling Cycles - Harvard JCHS',
+      chartOptions: {
+        chart: {
+          marginTop: 50,
+          marginBottom: 140
+        },
+        title: { text: chart_title_AWill_OF2 },
+        subtitle: {
+          text: table_notes_AWill_OF2,
+          y: -18
+        },
+        legend: { y: -45 },
+        credits: { position: { y: -190 } }
+      } //end exporting
+    } })); //end chart
+} //end createChart_AWill_OF2()
+</script>
